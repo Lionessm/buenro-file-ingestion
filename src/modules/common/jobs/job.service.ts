@@ -1,22 +1,43 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { S3ClientService } from '../s3.reader/s3.client.read.service';
+import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { ParserService } from './parser.service';
 
 @Injectable()
 export class ReaderJobService {
   private readonly logger = new Logger(ReaderJobService.name);
+  private jobRunning = false;
 
   constructor(
-    private readonly s3ClientService: S3ClientService
+    private readonly parserService: ParserService
   ) {
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
-    this.logger.log('Starting scheduled S3 read job...');
+    if (this.jobRunning) {
+      this.logger.log('Job is already running. Skipping...');
+      return;
+    }
 
-    // const keys = await this.s3Reader.listObjects(this.bucket, this.prefix);
-    const stream = await this.s3ClientService.streamJsonFromUrl();
-    return;
+    this.jobRunning = true;
+
+    try {
+      this.logger.log('Starting scheduled S3 read job...');
+
+      await this.parserService.streamJsonFromUrl();
+      
+      this.logger.log('Job completed successfully');
+    } catch (error: unknown) {
+      this.logger.error('Error in scheduled job:', error);
+    } finally {
+      // Always reset the flag, whether success or error
+      this.jobRunning = false;
+    }
   }
 }
+
+
+// filter sort la mongo request
+// filter trebuie filtrru de mongo trimis in post req
+// post get all de trimis in body
