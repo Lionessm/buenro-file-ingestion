@@ -8,9 +8,9 @@ import * as https from 'https';
 
 
 @Injectable()
-export class ParserService {
+export class ParserService { // or ingester service
   private readonly logger = new Logger(ParserService.name);
-  private batchSize = 10;
+  private batchSize = 15;
 
   async streamJsonFromUrl() {
     // Create local state for this processing session
@@ -25,18 +25,11 @@ export class ParserService {
       
       this.logger.log(`Fetching data from: ${url}`);
 
-      const agent = new https.Agent({
-        keepAlive: true,
-        keepAliveMsecs: 30000,
-        maxSockets: 50,
-      });
-
       const response = await axios({
         method: 'GET',
         url: url,
         responseType: 'stream',
         timeout: 0, // No timeout for large files
-        httpsAgent: agent,
       });
       
       const nodeStream = response.data;
@@ -60,6 +53,7 @@ export class ParserService {
     ingestData(batch: any[], incrementCounter: () => void) {
       const that = this;
       let itemCount = 0;
+
       return new Transform({
         objectMode: true,
         transform(data, encoding, callback) {
@@ -74,8 +68,8 @@ export class ParserService {
               this.pause();
               
               that.ingestBatch(batch).then(() => {
-                batch.length = 0; // Clear the batch
-                // Resume the stream after processing
+                batch.length = 0;
+
                 this.resume();
                 callback(null, data);
               }).catch((error) => {
