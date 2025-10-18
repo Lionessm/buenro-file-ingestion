@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { ParserService } from './parser.service';
+import { UrlSourceService } from './urlSource.service';
 
 @Injectable()
 export class ReaderJobService {
@@ -9,11 +9,12 @@ export class ReaderJobService {
   private jobRunning = false;
 
   constructor(
-    private readonly parserService: ParserService
+    private readonly parserService: ParserService,
+    private readonly urlSourceService: UrlSourceService
   ) {
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_HOURS) // cron or setInterval/setTimeout - doc didn't specify how often
   async handleCron() {
     if (this.jobRunning) {
       this.logger.log('Job is already running. Skipping...');
@@ -25,7 +26,10 @@ export class ReaderJobService {
     try {
       this.logger.log('Starting scheduled S3 read job...');
 
-      await this.parserService.streamJsonFromUrl();
+      const urls = this.urlSourceService.getUrls();
+      for (const url of urls) {
+        await this.parserService.streamJsonFromUrl(url);
+      }
       
       this.logger.log('Job completed successfully');
     } catch (error: unknown) {
@@ -36,7 +40,6 @@ export class ReaderJobService {
     }
   }
 }
-
 
 // filter sort la mongo request
 // filter trebuie filtrru de mongo trimis in post req
