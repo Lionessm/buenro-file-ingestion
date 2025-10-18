@@ -62,7 +62,10 @@ $ npm run build
 
 ### Cron Job Configuration
 - **Frequency**: Every 30 seconds (`EVERY_30_SECONDS`)
-- **Concurrency Control**: Prevents overlapping job executions
+- **Concurrency Control**: The `jobRunning` flag prevents overlapping job executions
+  - If a job is already running, subsequent cron triggers are skipped
+  - Prevents data corruption and memory issues from concurrent processing
+  - Ensures only one data ingestion process runs at a time
 - **Error Handling**: Graceful error handling with logging
 
 ### Data Normalization
@@ -219,18 +222,6 @@ The application uses NestJS's global validation pipe with:
 - **Dates**: ISO date string validation
 - **Nested Objects**: Proper validation for complex structures
 
-## 🧪 Testing
-
-```bash
-# Unit tests
-$ npm run test
-
-# End-to-end tests
-$ npm run test:e2e
-
-# Test coverage
-$ npm run test:cov
-```
 
 ## 🚨 Error Handling
 
