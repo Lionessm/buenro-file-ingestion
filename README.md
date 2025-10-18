@@ -114,7 +114,7 @@ The application handles two different input structures:
 
 ### MongoDB Configuration
 - **Database**: `buenro_db`
-- **Collection**: `propertiesmodel`
+- **Collection**: `properties`
 - **Unique Index**: `(source, originalId)` prevents duplicates
 
 ### Duplicate Prevention
@@ -333,8 +333,8 @@ If new fields need to be indexed for performance:
 
 ```javascript
 // In docker/mongo-init.js
-db.propertiesmodel.createIndex({ "data.originalData.propertyType": 1 });
-db.propertiesmodel.createIndex({ "data.originalData.currency": 1 });
+db.properties.createIndex({ "data.originalData.propertyType": 1 });
+db.properties.createIndex({ "data.originalData.currency": 1 });
 ```
 
 ### Key Benefits of This Mapping-Based Approach
