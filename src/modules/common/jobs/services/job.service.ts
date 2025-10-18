@@ -14,7 +14,7 @@ export class ReaderJobService {
   ) {
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS) // cron or setInterval/setTimeout - doc didn't specify how often
+  @Cron(CronExpression.EVERY_10_SECONDS) // cron or setInterval/setTimeout - doc didn't specify how often
   async handleCron() {
     if (this.jobRunning) {
       this.logger.log('Job is already running. Skipping...');

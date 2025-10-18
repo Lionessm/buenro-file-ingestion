@@ -237,11 +237,128 @@ The application includes comprehensive error handling:
 - **Streaming Processing**: Handles large JSON files without memory issues
 - **Batch Processing**: Processes data in configurable batches (default: 15 items)
 - **Database Indexes**: Optimized queries with proper indexing
-- **Connection Pooling**: Efficient database connection management
 - **Pagination**: Configurable pagination with limits (max 1000 items per request)
 
 ## 🔄 Monitoring & Logging
 
 - **Structured Logging**: Comprehensive logging with NestJS Logger
-- **Job Monitoring**: Logs job execution status and performance metrics
-- **Error Tracking**: Detailed error logging with stack traces
+- **Job Monitoring**: Logs job execution status and metrics (batch id and files processed)
+
+## 🔧 Extending the Solution for New Data Structures
+
+The application uses a mapping-based architecture to handle different data structures. This makes it extremely easy to add support for new external JSON sources. Here's how to extend the solution:
+
+### Architecture Overview
+
+The system uses:
+- **Type Guards**: Functions that identify different data structures
+- **Structure Mappings**: Configuration objects that define how to normalize each structure
+- **Extensible Parser**: Automatically handles new structures through the mapping system
+
+### Step-by-Step Extension Process
+
+#### 1. Define New Input Structure Type
+
+Create a new type in `src/modules/common/jobs/types/InputStructureType.ts`:
+
+```typescript
+// New structure type
+export type StructureCInput = {
+  propertyId: string;
+  title: string;
+  geoLocation: {
+    countryCode: string;
+    cityName: string;
+  };
+  pricing: {
+    nightlyRate: number;
+    currency: string;
+  };
+  availabilityStatus: boolean;
+  propertyType: string;
+};
+
+// Update the union type
+export type LocationInputData = StructureAInput | StructureBInput | StructureCInput;
+
+// Add type guard function
+export function isStructureC(data: LocationInputData): data is StructureCInput {
+  return 'geoLocation' in data && 'pricing' in data && 'propertyType' in data;
+}
+```
+
+#### 2. Add Structure Mapping
+
+Update `src/modules/common/jobs/mappings/structuredMappings.ts`:
+
+```typescript
+export const structureMappings = {
+  // Add new structure mapping
+  structureC: {
+    id: (item: any) => item.propertyId || null,
+    name: (item: any) => item.title || null,
+    location: (item: any) => ({
+      country: item.geoLocation?.countryCode || null,
+      city: item.geoLocation?.cityName || null,
+    }),
+    isAvailable: (item: any) => item.availabilityStatus !== undefined ? item.availabilityStatus : null,
+    priceForNight: (item: any) => item.pricing?.nightlyRate || null,
+    priceSegment: (item: any, that: any) => that.calculatePriceSegment(item.pricing?.nightlyRate),
+  }
+};
+```
+
+#### 3. Update Parser Service
+
+Modify `src/modules/common/jobs/services/parser.service.ts`:
+
+```typescript
+
+  else if (isStructureC(item)) structureType = 'structureC'; // Add new structure
+
+```
+
+#### 4. Add New Data Source Configuration
+
+Update the URL source in UrlSourceService service
+
+#### 5. Extend API Filters (Optional)
+
+If new fields need to be searchable, update the DTOs and service:
+
+```typescript
+// In PropertyFilterDto
+@IsOptional()
+@IsString()
+propertyType?: string;
+
+@IsOptional()
+@IsString()
+currency?: string;
+
+// In properties.service.ts - add new filter logic
+if (filter.propertyType) {
+  query['data.originalData.propertyType'] = { $regex: filter.propertyType, $options: 'i' };
+}
+```
+
+#### 6. Update Database Schema (If Needed)
+
+If new fields need to be indexed for performance:
+
+```javascript
+// In docker/mongo-init.js
+db.propertiesmodel.createIndex({ "data.originalData.propertyType": 1 });
+db.propertiesmodel.createIndex({ "data.originalData.currency": 1 });
+```
+
+### Key Benefits of This Mapping-Based Approach
+
+- **✅ Configuration-Driven**: Adding new structures requires minimal code changes
+- **✅ Type Safety**: Full TypeScript support for all structures
+- **✅ Modular Design**: Each structure mapping is independent
+- **✅ Easy Testing**: Can test new structures in isolation
+- **✅ Maintainable**: Clear separation between structure detection and normalization
+- **✅ Flexible**: Can handle any number of new data sources
+
+This mapping-based architecture allows you to support any number of new data sources with minimal code changes while maintaining full type safety and extensibility.

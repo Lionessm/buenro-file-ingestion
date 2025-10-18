@@ -7,6 +7,8 @@ import axios from 'axios';
 import { PropertiesDbService } from '../../database/services/propertiesDb.service';
 import { NormalizedLocationData } from '../types/NormalizedLocationData';
 import { PriceSegment } from '../../properties/types/propertySearchFilter.type';
+import { isStructureA, isStructureB , LocationInputData } from '../types/InputStructureType';
+import { structureMappings } from '../mappings/structuredMappings';
 
 @Injectable()
 export class ParserService {
@@ -112,54 +114,39 @@ export class ParserService {
     }
   }
 
-  normalizeBatchData(batch: any[]): NormalizedLocationData[] {
-    return batch.map(item => this.normalizeItem(item));
+  normalizeBatchData(batch: LocationInputData[]): NormalizedLocationData[] {
+    return batch.map(item => this.normalizeItemNew(item));
   }
 
-  private normalizeItem(item: any): NormalizedLocationData {
-    // based only on the data structures provided - needs to be extended to handle other data structures
-    // in the case of adding them
-    if (item.name && item.address && item.address.country && item.address.city) {
-      return {
-        id: item.id?.toString() || null,
-        name: item.name || null,
-        location: {
-          country: item.address.country || null,
-          city: item.address.city || null
-        },
-        isAvailable: item.isAvailable !== undefined ? item.isAvailable : null,
-        priceForNight: item.priceForNight || null,
-        priceSegment: this.calculatePriceSegment(item.priceForNight),
-        // Keep original data for reference
-        originalData: item
-      };
-    }
-    
-    if (item.city && item.priceSegment && item.pricePerNight !== undefined) {
-      return {
-        id: item.id || null,
-        name: null, // Structure B doesn't have name
-        location: {
-          country: null, // Structure B doesn't have country
-          city: item.city || null
-        },
-        isAvailable: item.availability !== undefined ? item.availability : null,
-        priceForNight: item.pricePerNight || null,
-        priceSegment: item.priceSegment || null,
-        // Keep original data for reference
-        originalData: item
-      };
-    }
-    
-    // Unknown structure - return as-is with normalized fields
-    this.logger.warn(`Unknown data structure detected for item: ${JSON.stringify(item)}`); // presuming we will know the sources
-  }
-
-  private calculatePriceSegment(price: number): PriceSegment | 'unknown' {
+  calculatePriceSegment(price: number): PriceSegment | 'unknown' {
     if (!price || typeof price !== 'number') return 'unknown';
     
     if (price < 300) return PriceSegment.LOW;
     if (price < 700) return PriceSegment.MEDIUM;
     return PriceSegment.HIGH;
+  }
+
+  private normalizeItemNew(item: LocationInputData): NormalizedLocationData {
+    let structureType: keyof typeof structureMappings | null = null;
+  
+    if (isStructureA(item)) structureType = 'structureA';
+    else if (isStructureB(item)) structureType = 'structureB';
+    else structureType = null;
+  
+    if (!structureType) {
+      // throw error if unknown structure
+      throw new Error(`Unknown data structure detected for item: ${JSON.stringify(item)}`)
+    }
+  
+    const mapping = structureMappings[structureType];
+    return {
+      id: mapping.id(item) || null,
+      name: mapping.name(item),
+      location: mapping.location(item),
+      isAvailable: mapping.isAvailable(item),
+      priceForNight: mapping.priceForNight(item),
+      priceSegment: mapping.priceSegment(item, this),
+      originalData: item,
+    };
   }
 }
