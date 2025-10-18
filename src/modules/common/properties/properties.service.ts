@@ -15,11 +15,11 @@ export class PropertiesService {
       const query: any = {};
       
       if (filter.country) {
-        query['data.location.country'] = filter.country;
+        query['data.location.country'] = { $regex: filter.country, $options: 'i' };
       }
       
       if (filter.city) {
-        query['data.location.city'] = filter.city;
+        query['data.location.city'] = { $regex: filter.city, $options: 'i' };
       }
       
       // Availability filter - direct field access
@@ -48,9 +48,9 @@ export class PropertiesService {
         query['data.priceForNight'] = priceConditions;
       }
 
-      // Price segment filter - direct match for normalized data
+      // Price segment filter - partial match for normalized data
       if (filter.priceSegment) {
-        query['data.priceSegment'] = filter.priceSegment;
+        query['data.priceSegment'] = { $regex: filter.priceSegment, $options: 'i' };
       }
       
       // Property name filter - case insensitive regex
@@ -78,9 +78,9 @@ export class PropertiesService {
         }
       }
       
-      // Source and batch filters - direct field access
+      // Source and batch filters - partial match
       if (filter.source) {
-        query.source = filter.source;
+        query.source = { $regex: filter.source, $options: 'i' };
       }
 
       // Build optimized sort object for normalized structure

@@ -40,7 +40,3 @@ export class ReaderJobService {
     }
   }
 }
-
-// filter sort la mongo request
-// filter trebuie filtrru de mongo trimis in post req
-// post get all de trimis in body

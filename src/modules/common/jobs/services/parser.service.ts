@@ -6,9 +6,10 @@ import { pipeline } from 'stream/promises';
 import axios from 'axios';
 import { PropertiesDbService } from '../../database/services/propertiesDb.service';
 import { NormalizedLocationData } from '../types/NormalizedLocationData';
+import { PriceSegment } from '../../properties/types/propertySearchFilter.type';
 
 @Injectable()
-export class ParserService { // or ingester service
+export class ParserService {
   private readonly logger = new Logger(ParserService.name);
   private batchSize = 15;
 
@@ -94,7 +95,7 @@ export class ParserService { // or ingester service
       const normalizedBatch = this.normalizeBatchData(batch);
       this.logger.log(`Normalized ${batch.length} items to consistent structure`);
       
-      // Generate a unique batch ID
+      // Generate a unique batch ID === this was used for testing purposes - is optional
       const batchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       // Insert normalized batch into MongoDB
@@ -116,7 +117,8 @@ export class ParserService { // or ingester service
   }
 
   private normalizeItem(item: any): NormalizedLocationData {
-    // Check if it's Structure A (has 'name' and 'address')
+    // based only on the data structures provided - needs to be extended to handle other data structures
+    // in the case of adding them
     if (item.name && item.address && item.address.country && item.address.city) {
       return {
         id: item.id?.toString() || null,
@@ -133,7 +135,6 @@ export class ParserService { // or ingester service
       };
     }
     
-    // Check if it's Structure B (has 'city' and 'priceSegment')
     if (item.city && item.priceSegment && item.pricePerNight !== undefined) {
       return {
         id: item.id || null,
@@ -151,14 +152,14 @@ export class ParserService { // or ingester service
     }
     
     // Unknown structure - return as-is with normalized fields
-    this.logger.warn(`Unknown data structure detected for item: ${JSON.stringify(item)}`); // presuming we will know the source
+    this.logger.warn(`Unknown data structure detected for item: ${JSON.stringify(item)}`); // presuming we will know the sources
   }
 
-  private calculatePriceSegment(price: number): 'low' | 'medium' | 'high' | 'unknown' {
+  private calculatePriceSegment(price: number): PriceSegment | 'unknown' {
     if (!price || typeof price !== 'number') return 'unknown';
     
-    if (price < 300) return 'low';
-    if (price < 700) return 'medium';
-    return 'high';
+    if (price < 300) return PriceSegment.LOW;
+    if (price < 700) return PriceSegment.MEDIUM;
+    return PriceSegment.HIGH;
   }
 }

@@ -7,6 +7,7 @@ import { DatabaseModule } from "./common/database/database.module";
 import { PropertiesController } from "./common/properties/properties.controller";
 import { PropertiesService } from "./common/properties/properties.service";
 import { UrlSourceService } from "./common/jobs/services/urlSource.service";
+import { JobsModule } from "./common/jobs/jobs.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UrlSourceService } from "./common/jobs/services/urlSource.service";
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
+    JobsModule,
   ],
   controllers: [PropertiesController],
   providers: [

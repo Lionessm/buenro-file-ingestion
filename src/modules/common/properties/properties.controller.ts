@@ -1,7 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common'
 import { PropertiesService } from './properties.service';
-import { PropertySearchRequestType } from './types/propertySearchRequest.type';
-import { PropertyFields, PropertyFilter, PropertyPagination, PropertySort } from './types';
+import { PropertySearchRequestDto } from './dto/propertySearchRequest.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -10,7 +9,7 @@ export class PropertiesController {
   ) {}
 
   @Post('/search')
-  async searchProperties(@Body() request: PropertySearchRequestType) {
+  async searchProperties(@Body() request: PropertySearchRequestDto) {
     const {
       filter = {},
       sort = { createdAt: -1 },
@@ -18,6 +17,6 @@ export class PropertiesController {
       fields = { includeAll: true }
     } = request;
 
-    return await this.propertiesService.searchProperties(filter as PropertyFilter, sort as PropertySort, pagination as PropertyPagination, fields as PropertyFields);
+    return await this.propertiesService.searchProperties(filter, sort, pagination, fields);
   }
 }

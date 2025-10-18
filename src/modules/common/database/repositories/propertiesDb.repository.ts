@@ -9,7 +9,7 @@ export class PropertiesRepository {
   private readonly logger = new Logger(PropertiesRepository.name);
 
   constructor(
-    @InjectModel(PropertiesModel.name) private documentModel: Model<PropertiesDocument>,
+    @InjectModel(PropertiesModel.name) private propertiesModel: Model<PropertiesDocument>,
   ) {}
 
   async insertMany(documents: any[], source: string, batchId?: string): Promise<PropertiesDocument[]> {
@@ -21,7 +21,7 @@ export class PropertiesRepository {
         originalId: doc.id || doc._id || null,
       }));
 
-      const result = await this.documentModel.insertMany(documentsToInsert, {
+      const result = await this.propertiesModel.insertMany(documentsToInsert, {
         ordered: false, // Continue inserting even if some fail due to duplicates
       });
 
@@ -37,7 +37,7 @@ export class PropertiesRepository {
         
         // Return the successfully inserted documents
         return error.result?.insertedIds ? 
-          await this.documentModel.find({ _id: { $in: Object.values(error.result.insertedIds) } }) :
+          await this.propertiesModel.find({ _id: { $in: Object.values(error.result.insertedIds) } }) :
           [];
       }
       
@@ -57,7 +57,7 @@ export class PropertiesRepository {
   }): Promise<PropertiesDocument[]> {
     const { query, sort = { createdAt: -1 }, limit = 100, skip = 0, projection } = options;
     
-    let queryBuilder = this.documentModel.find(query);
+    let queryBuilder = this.propertiesModel.find(query);
     
     if (sort) queryBuilder = queryBuilder.sort(sort);
     if (limit) queryBuilder = queryBuilder.limit(limit);
@@ -68,6 +68,6 @@ export class PropertiesRepository {
   }
 
   async countWithQuery(query: any): Promise<number> {
-    return this.documentModel.countDocuments(query).exec();
+    return this.propertiesModel.countDocuments(query).exec();
   }
 }
