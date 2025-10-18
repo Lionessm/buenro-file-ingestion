@@ -13,12 +13,6 @@ db.createUser({
   ]
 });
 
-// Create indexes for better performance
-// Note: Collection is named 'properties'
-db.properties.createIndex({ "createdAt": 1 });
-db.properties.createIndex({ "source": 1 });
-db.properties.createIndex({ "batchId": 1 });
-
 // Create unique compound index to prevent duplicates from multiple runs
 try {
   db.properties.createIndex({ "source": 1, "originalId": 1 }, { unique: true });

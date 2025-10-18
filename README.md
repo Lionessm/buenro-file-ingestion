@@ -19,7 +19,7 @@ A NestJS application that automatically ingests and processes large JSON files f
 2. **Parser Service** → Streams and processes large JSON files
 3. **Data Normalization** → Converts different structures to consistent format
 4. **MongoDB Insertion** → Stores normalized data with duplicate prevention
-5. **Search API** → Provides flexible querying with validation
+5. **Search API** → Provides querying with validation
 
 ### Key Components
 - **ReaderJobService**: Scheduled cron job for S3 data ingestion
@@ -116,7 +116,6 @@ The application handles two different input structures:
 - **Database**: `buenro_db`
 - **Collection**: `propertiesmodel`
 - **Unique Index**: `(source, originalId)` prevents duplicates
-- **Additional Indexes**: `createdAt`, `source`, `batchId` for performance
 
 ### Duplicate Prevention
 The application uses MongoDB's unique compound index on `(source, originalId)` to prevent duplicate insertions. When duplicates are encountered:
@@ -223,26 +222,12 @@ The application uses NestJS's global validation pipe with:
 - **Nested Objects**: Proper validation for complex structures
 
 
-## 🚨 Error Handling
-
-The application includes comprehensive error handling:
-- **Validation Errors**: Automatic 400 responses with detailed messages
-- **Database Errors**: Graceful handling of connection issues
-- **Duplicate Errors**: Automatic skipping with logging
-- **Streaming Errors**: Proper error propagation in data processing
-- **Job Errors**: Prevents job corruption and maintains state
-
 ## 📈 Performance Features
 
 - **Streaming Processing**: Handles large JSON files without memory issues
 - **Batch Processing**: Processes data in configurable batches (default: 15 items)
-- **Database Indexes**: Optimized queries with proper indexing
 - **Pagination**: Configurable pagination with limits (max 1000 items per request)
 
-## 🔄 Monitoring & Logging
-
-- **Structured Logging**: Comprehensive logging with NestJS Logger
-- **Job Monitoring**: Logs job execution status and metrics (batch id and files processed)
 
 ## 🔧 Extending the Solution for New Data Structures
 
