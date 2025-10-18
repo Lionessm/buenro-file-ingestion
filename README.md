@@ -66,7 +66,6 @@ $ npm run build
   - If a job is already running, subsequent cron triggers are skipped
   - Prevents data corruption and memory issues from concurrent processing
   - Ensures only one data ingestion process runs at a time
-- **Error Handling**: Graceful error handling with logging
 
 ### Data Normalization
 The application handles two different input structures:
@@ -225,7 +224,7 @@ The application uses NestJS's global validation pipe with:
 ## 📈 Performance Features
 
 - **Streaming Processing**: Handles large JSON files without memory issues
-- **Batch Processing**: Processes data in configurable batches (default: 15 items)
+- **Batch Processing**: Processes data in configurable batches (default: 100 items)
 - **Pagination**: Configurable pagination with limits (max 1000 items per request)
 
 
@@ -347,3 +346,16 @@ db.properties.createIndex({ "data.originalData.currency": 1 });
 - **✅ Flexible**: Can handle any number of new data sources
 
 This mapping-based architecture allows you to support any number of new data sources with minimal code changes while maintaining full type safety and extensibility.
+
+## ⚠️ Important: AWS S3 Access Considerations
+
+> **Current Implementation**: The solution uses axios requests to fetch JSON files from S3 URLs, even though the URLs are publicly accessible. This is because the S3 bucket requires AWS permissions for proper access.
+
+> **Recommended Approach**: If you have AWS bucket access credentials, implement an S3 client that:
+> - Iterates through bucket files automatically
+> - Reads files individually using the S3 SDK
+> - Follows the current job logic for processing each file
+> - Provides better error handling and retry mechanisms
+> - Supports incremental processing of new/changed files
+
+This would provide a more robust and scalable solution for production environments.

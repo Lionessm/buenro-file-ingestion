@@ -13,7 +13,7 @@ import { structureMappings } from '../mappings/structuredMappings';
 @Injectable()
 export class ParserService {
   private readonly logger = new Logger(ParserService.name);
-  private batchSize = 15;
+  private batchSize = 100;
 
   constructor(
     private readonly propertiesDbService: PropertiesDbService,
