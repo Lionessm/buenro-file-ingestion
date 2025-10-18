@@ -29,8 +29,7 @@ export class ParserService {
       const response = await axios({
         method: 'GET',
         url: url,
-        responseType: 'stream',
-        timeout: 0, // No timeout for large files
+        responseType: 'stream'
       });
       
       const nodeStream = response.data;
