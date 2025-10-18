@@ -1,6 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common'
 import { PropertiesService } from './properties.service';
-import { PropertySearchRequestDto } from './dto/propertySearchRequest.dto';
+import { PropertySearchRequestDto } from './dtos/propertySearchRequest.dto';
+import { PropertySearchResponseDto } from './dtos/propertySearchResponse.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -9,7 +10,7 @@ export class PropertiesController {
   ) {}
 
   @Post('/search')
-  async searchProperties(@Body() request: PropertySearchRequestDto) {
+  async searchProperties(@Body() request: PropertySearchRequestDto): Promise<PropertySearchResponseDto> {
     const {
       filter = {},
       sort = { createdAt: -1 },
